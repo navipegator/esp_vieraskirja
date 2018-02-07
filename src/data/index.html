@@ -1,7 +1,7 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Vieraskirja</title>
+	<title>Guest Book</title>
 	<link rel="stylesheet" href="library/bootstrap.min.css" >
 	<script src="library/popper.min.js" ></script>
 	<script src="library/vue.min.js" ></script>
@@ -11,22 +11,22 @@
  <body> 
 	<div class="container" id="guestbook">
 		<div class="jumbotron">
-			<h2>Salo Iot hacklab</h2>
-			<h4>Vieraskirja v2</h4>
+			<h2>Iot hacklab</h2>
+			<h4>Guest book</h4>
 		</div>
 		<form v-on:submit = "onCreate">
 			<div class="form-group">
-				<input type="text" class="form-control input-sm" name="author" v-model="author" placeholder="Nimimerkki">
+				<input type="text" class="form-control input-sm" name="author" v-model="author" placeholder="Name">
 			</div>
 			<div class="form-group">
-				<input type="text" class="form-control input-sm" name="text" v-model="text" placeholder="Kommentti t‰h‰n">
+				<input type="text" class="form-control input-sm" name="text" v-model="text" placeholder="Comment">
 			</div>     
 			<div class="form-group text-right">   
-				<button type="submit" class="btn btn-primary btn-lg">L‰het‰</button>
+				<button type="submit" class="btn btn-primary btn-lg">Send</button>
 			</div>	  
 		</form>
 		<div class="comment" v-for="(comment, index) in comments"  >
-			<h3>{{toDate(comment.time)}} Nimimerkki: {{comment.author}}</h3>
+			<h3>{{toDate(comment.time)}} Name: {{comment.author}}</h3>
 			<p>{{comment.text}}</p> 
 		</div>	
 	<div>    
@@ -40,50 +40,49 @@
  		author: "",
  		comments: []
  	},
-	//Alussa ladataan lista kommenteista
+	// Load list of comments
  	created: function () {
  		this.loadList();
  	},
  	methods: {
-		//Muuntaa millisekunnit tekstiksi
+		// Convert millis to String
  		toDate: function (millis) {
  			return new Date(millis).toString();
  		},
-		//Lataa yksi kommenti
+		// Load one comment
  		loadEntry: function (name) {
  			$.ajax({
  				context: this,
  				type: "GET",
  				dataType: 'json',
- 				url: "http://www.salohack.fi/entry?file=" + name.substring(9, 22),
+ 				url: "http://www.iot.com/entry?file=" + name.substring(9, 22),
  				success: function (result) {
- 					console.log(result);
-					//Lis‰‰ kommentti listaan
+					// Add comment to list
  					this.comments.push(result);
  				}
  			});
  		},
-		//Lataa lista kommenteista
+		// Load list of comments
  		loadList: function () {
  			$.ajax({
  				context: this,
  				type: "GET",
  				dataType: 'json',
- 				url: "http://www.salohack.fi/list",
+ 				url: "http://www.iot.com/list",
  				success: function (result) {
  					console.log(result);
-					//Vaihda listan j‰rjestyst‰ niin ett‰ uusin on ylh‰‰ll‰
+					// Reorder list
  					result.reverse();
-					//Tyhjenn‰ vanhat kommentit
+					// Clear old comments
  					this.comments = [];
-					//Lataa kommentit puolen sekunnin v‰lein ettei esp8622 rasitu liikaa
+					// Load comment every half second. This gives nice effect to UI, and limits stress to Esp8266
  					for (var i = 0; i < result.length; i++) {
  						setTimeout(this.loadEntry, i * 500, result[i].name);
  					}
  				}
  			});
  		},
-		//L‰het‰ uusi kommentti palvelimelle
+		// Send new comment to server
  		onCreate: function (e) {
  			e.preventDefault()
  			$.ajax({
@@ -96,19 +95,19 @@
  					text: this.text,
  					time: new Date().getTime()
  				}),
- 				url: "http://www.salohack.fi/entry?time=" + new Date().getTime() 
+ 				url: "http://www.iot.com/entry?time=" + new Date().getTime() 
  			}).done(function (result) {
-					//Tyhjenn‰ lomake
+					// Clear form
  					this.author = '';
  					this.text = '';
-					//Lataa lista uudestaan
+					// Reload list
  					this.loadList();
  				}).fail(function(err){
 					console.log(err);
-					//Tyhjenn‰ lomake
+					// Clear Form
  					this.author = '';
  					this.text = '';
-					//Lataa lista uudestaan
+					// Reload list
  					this.loadList();
 				});
  		}
